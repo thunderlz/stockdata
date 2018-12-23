@@ -1,6 +1,7 @@
 import tushare as ts
-import pandas as pd
-import matplotlib.pyplot as plt
+# import numpy as np
+# import pandas as pd
+# import matplotlib.pyplot as plt
 import pymysql
 ts.set_token('808bf3dd5d9ecbad0130ffc842aa3338112ddbb389e91fa967240921')
 pro = ts.pro_api()
@@ -10,9 +11,6 @@ import datetime
 import warnings
 warnings.filterwarnings("ignore")
 
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置-黑体
-plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
-sns.set(font='SimHei')  # 解决Seaborn中文显示问题
 
 
 class datamanage():
@@ -48,7 +46,8 @@ class datamanage():
         self.dbconn.commit()
 
     def __del__(self):
-        self.dbconn.close
+       self.dbconn.close()
+        # pass
 
     def getstocksdaily(self):
         if len(self.stocks) == 0:
@@ -96,3 +95,6 @@ class datamanage():
             #         提交数据库
             self.dbconn.commit()
 
+if __name__=='__main__':
+    dm = datamanage('20181215')
+    dm.getstocksdaily()
