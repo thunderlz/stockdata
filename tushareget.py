@@ -1,5 +1,5 @@
 import datamanage
 
 if __name__=='__main__':
-    dm = datamanage.datamanage('20181215')
+    dm = datamanage.datamanage((datetime.datetime.today()-datetime.timedelta(5)).strftime('%Y%m%d'))
     dm.getstocksdaily()
