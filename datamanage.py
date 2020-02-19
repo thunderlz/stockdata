@@ -17,7 +17,7 @@ class datamanage():
     #     管理股票的价格数据，从tushare获取数据，如果已经有数据，就不获取。
 
     def dbinit(self):
-        self.dbconn = pymysql.connect(host='10.0.1.210', port=3306, user='root', password='751982THUNDERlz',
+        self.dbconn = pymysql.connect(host='localhost', port=3306, user='root', password='751982leizhen',
                                       database='leizquant')
         self.dbcur = self.dbconn.cursor()
         self.dbcur.execute('''create table if not exists stocksdaily (ts_code varchar(20),trade_date date,openprice float,highprice float,	
