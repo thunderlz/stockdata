@@ -55,12 +55,12 @@ class datamanage():
 
         #         获取所有数据
         for stock in self.stocks:
-            print('now is:{}'.format(stock))
+            print('ts_code:{} fetching'.format(stock))
             time.sleep(1)
             try:
                 stockdaily = pro.daily(ts_code=stock, start_date=self.startdate, end_date=self.enddate)
             except:
-                print(stock, ',is error')
+                print(stock, ', error')
                 break
             for i in range(len(stockdaily)):
                 self.dbcur.execute('''insert ignore into stocksdaily(ts_code,trade_date,openprice,highprice,lowprice,closeprice,pre_closeprice,changeprice,pct_chg,vol,amount) 
