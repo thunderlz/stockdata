@@ -55,7 +55,7 @@ class datamanage():
 
         #         获取所有数据
         for stock in self.stocks:
-            print('ts_code:{} fetching'.format(stock))
+            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
             time.sleep(1)
             try:
                 stockdaily = pro.daily(ts_code=stock, start_date=self.startdate, end_date=self.enddate)
@@ -73,6 +73,7 @@ class datamanage():
                                     float(stockdaily.at[i, 'amount'])))
             #         提交数据库
             self.dbconn.commit()
+            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,stock))
 
     #     复权因子
     def getadjfactor(self):
