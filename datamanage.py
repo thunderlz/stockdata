@@ -85,7 +85,7 @@ class datamanage():
 
         #         获取所有数据
         for stock in self.stocks:
-            print('now is:{}'.format(stock))
+            print('{}============>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
             time.sleep(1)
             stockdaily = pro.adj_factor(ts_code=stock, start_date=self.startdate, end_date=self.enddate)
             for i in range(len(stockdaily)):
@@ -99,3 +99,4 @@ class datamanage():
 if __name__=='__main__':
     dm = datamanage('20181215')
     dm.getstocksdaily()
+#    dm.getadjfactor()
