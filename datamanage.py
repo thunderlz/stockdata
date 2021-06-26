@@ -56,12 +56,15 @@ class datamanage():
         #         获取所有数据
         for stock in self.stocks:
             print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
-            time.sleep(1)
+            time.sleep(5)
+            wrongtime=0
+        
             try:
                 stockdaily = pro.daily(ts_code=stock, start_date=self.startdate, end_date=self.enddate)
             except:
                 print(stock, ', error')
-                break
+                time.sleep(5)
+                continue
             for i in range(len(stockdaily)):
                 self.dbcur.execute('''insert ignore into stocksdaily(ts_code,trade_date,openprice,highprice,lowprice,closeprice,pre_closeprice,changeprice,pct_chg,vol,amount) 
                                     values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
@@ -84,17 +87,52 @@ class datamanage():
             self.stocks = list(self.stocklist['ts_code'])
 
         #         获取所有数据
-        for stock in self.stocks:
-            print('now is:{}'.format(stock))
-            time.sleep(1)
-            stockdaily = pro.adj_factor(ts_code=stock, start_date=self.startdate, end_date=self.enddate)
-            for i in range(len(stockdaily)):
+        for adj in self.stocks:
+            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),adj))
+            time.sleep(5)
+            try:
+                stockadj = pro.adj_factor(ts_code=adj, start_date=self.startdate, end_date=self.enddate)
+            except:
+                print(adj, ', error')
+                time.sleep(5)
+                continue
+            
+            for i in range(len(stockadj)):
                 self.dbcur.execute('''insert ignore into adj_factor(ts_code,trade_date,adj_factor) 
                                     values(%s,%s,%s)''',
-                                   (stockdaily.at[i, 'ts_code'], stockdaily.at[i, 'trade_date'],
-                                    float(stockdaily.at[i, 'adj_factor'])))
+                                   (stockadj.at[i, 'ts_code'], stockadj.at[i, 'trade_date'],
+                                    float(stockadj.at[i, 'adj_factor'])))
             #         提交数据库
             self.dbconn.commit()
+            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,adj))
+
+    def getindexdaily(self):
+        # 指数代码
+        indexlist=['000001.SH','399001.SZ','399006.SZ','000300.SH','000016.SH','000905.SH']
+        self.dbcur.execute('''create table if not exists indexdaily (ts_code varchar(20),trade_date date,openprice float,highprice float,	
+                           lowprice float,closeprice float,pre_closeprice float,changeprice float,pct_chg float,vol float,amount float,
+                           primary key(ts_code,trade_date))''')
+        for index  in indexlist:
+            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),index))
+            time.sleep(5)
+            try:
+                indexdaily = ts.pro_bar(ts_code=index, adj='qfq', start_date=self.startdate, end_date=self.enddate,freq='D',asset='I')
+            except:
+                print(index, ', error')
+                time.sleep(5)
+                continue
+            for i in range(len(indexdaily)):
+                self.dbcur.execute('''insert ignore into indexdaily(ts_code,trade_date,openprice,highprice,lowprice,closeprice,pre_closeprice,changeprice,pct_chg,vol,amount) 
+                                    values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+                                   (indexdaily.at[i, 'ts_code'], indexdaily.at[i, 'trade_date'],
+                                    float(indexdaily.at[i, 'open']), float(indexdaily.at[i, 'high']),
+                                    float(indexdaily.at[i, 'low']), float(indexdaily.at[i, 'close']),
+                                    float(indexdaily.at[i, 'pre_close']), float(indexdaily.at[i, 'change']),
+                                    float(indexdaily.at[i, 'pct_chg']), float(indexdaily.at[i, 'vol']),
+                                    float(indexdaily.at[i, 'amount'])))
+            #         提交数据库
+            self.dbconn.commit()
+            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,index))
 
 if __name__=='__main__':
     dm = datamanage('20181215')
