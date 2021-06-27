@@ -1,6 +1,6 @@
 import tushare as ts
 # import numpy as np
-# import pandas as pd
+import pandas as pd
 # import matplotlib.pyplot as plt
 import pymysql
 ts.set_token('808bf3dd5d9ecbad0130ffc842aa3338112ddbb389e91fa967240921')
@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 
 class datamanage():
-    #     管理股票的价格数据，从tushare获取数据，如果已经有数据，就不获取。
+    #     管理股票的价格数据，从tushare获取数据，如果已经有数据，就不不保存。
 
     def dbinit(self):
         self.dbconn = pymysql.connect(host='localhost', port=3306, user='root', password='751982leizhen',
@@ -55,7 +55,7 @@ class datamanage():
 
         #         获取所有数据
         for stock in self.stocks:
-            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
+            print('{} ===========>stock ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
             time.sleep(5)
             wrongtime=0
         
@@ -76,7 +76,7 @@ class datamanage():
                                     float(stockdaily.at[i, 'amount'])))
             #         提交数据库
             self.dbconn.commit()
-            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,stock))
+            print('{} ===========>stock ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,stock))
 
     #     复权因子
     def getadjfactor(self):
@@ -88,7 +88,7 @@ class datamanage():
 
         #         获取所有数据
         for adj in self.stocks:
-            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),adj))
+            print('{} ===========>adj ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),adj))
             time.sleep(5)
             try:
                 stockadj = pro.adj_factor(ts_code=adj, start_date=self.startdate, end_date=self.enddate)
@@ -104,7 +104,7 @@ class datamanage():
                                     float(stockadj.at[i, 'adj_factor'])))
             #         提交数据库
             self.dbconn.commit()
-            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,adj))
+            print('{} ===========>adj ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,adj))
 
     def getindexdaily(self):
         # 指数代码
@@ -113,7 +113,7 @@ class datamanage():
                            lowprice float,closeprice float,pre_closeprice float,changeprice float,pct_chg float,vol float,amount float,
                            primary key(ts_code,trade_date))''')
         for index  in indexlist:
-            print('{} ===========>ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),index))
+            print('{} ===========>index ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),index))
             time.sleep(5)
             try:
                 indexdaily = ts.pro_bar(ts_code=index, adj='qfq', start_date=self.startdate, end_date=self.enddate,freq='D',asset='I')
@@ -132,7 +132,34 @@ class datamanage():
                                     float(indexdaily.at[i, 'amount'])))
             #         提交数据库
             self.dbconn.commit()
-            print('{} ===========>ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,index))
+            print('{} ===========>index ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,index))
+
+    def getfundsdaily(self):
+        # 获取基金数据，基金是按照‘一天‘传参数
+        self.dbcur.execute('''create table if not exists fundsdaily (ts_code varchar(20),trade_date date,openprice float,highprice float,	
+                           lowprice float,closeprice float,pre_closeprice float,changeprice float,pct_chg float,vol float,amount float,
+                           primary key(ts_code,trade_date))''')
+        for day in pd.date_range(self.startdate,self.enddate):
+            print('{} ===========>date:{} funds fetching'.format(time.asctime( time.localtime(time.time()) ),day.strftime('%Y%m%d')))
+            time.sleep(2)
+            try:
+                fundsdaily = pro.fund_daily(trade_date=day.strftime('%Y%m%d'))
+            except:
+                print(day.strftime('%Y%m%d'), ', error')
+                time.sleep(5)
+                continue
+            for i in range(len(fundsdaily)):
+                self.dbcur.execute('''insert ignore into fundsdaily(ts_code,trade_date,openprice,highprice,lowprice,closeprice,pre_closeprice,changeprice,pct_chg,vol,amount) 
+                                    values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+                                   (fundsdaily.at[i, 'ts_code'], fundsdaily.at[i, 'trade_date'],
+                                    float(fundsdaily.at[i, 'open']), float(fundsdaily.at[i, 'high']),
+                                    float(fundsdaily.at[i, 'low']), float(fundsdaily.at[i, 'close']),
+                                    float(fundsdaily.at[i, 'pre_close']), float(fundsdaily.at[i, 'change']),
+                                    float(fundsdaily.at[i, 'pct_chg']), float(fundsdaily.at[i, 'vol']),
+                                    float(fundsdaily.at[i, 'amount'])))
+            #         提交数据库
+            self.dbconn.commit()
+            print('{} ===========>date:{} funds got'.format( time.asctime( time.localtime(time.time()) ) ,day.strftime('%Y%m%d')))
 
 if __name__=='__main__':
     dm = datamanage('20181215')
