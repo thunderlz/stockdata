@@ -56,7 +56,7 @@ class datamanage():
         #         获取所有数据
         for stock in self.stocks:
             print('{} ===========>stock ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
-            time.sleep(5)
+            time.sleep(1)
             wrongtime=0
         
             try:
@@ -89,7 +89,7 @@ class datamanage():
         #         获取所有数据
         for adj in self.stocks:
             print('{} ===========>adj ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),adj))
-            time.sleep(5)
+            time.sleep(1)
             try:
                 stockadj = pro.adj_factor(ts_code=adj, start_date=self.startdate, end_date=self.enddate)
             except:
@@ -114,7 +114,7 @@ class datamanage():
                            primary key(ts_code,trade_date))''')
         for index  in indexlist:
             print('{} ===========>index ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),index))
-            time.sleep(5)
+            time.sleep(1)
             try:
                 indexdaily = ts.pro_bar(ts_code=index, adj='qfq', start_date=self.startdate, end_date=self.enddate,freq='D',asset='I')
             except:
