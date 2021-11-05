@@ -25,6 +25,10 @@ class datamanage():
                            primary key(ts_code,trade_date))''')
         self.dbcur.execute('''create table if not exists stocklist (ts_code varchar(20) primary key,symbol	varchar(20),
                             name varchar(20),area varchar(20),industry varchar(20),list_date date)''')
+        self.dbcur.execute('''create table if not exists basicdaily(ts_code varchar(20),trade_date varchar(20),close float,turnover_rate float,turnover_rate_f float,volume_ratio float,
+                     pe float,pe_ttm float,pb float,ps float,ps_ttm float,dv_ratio float,dv_ttm float,total_share float,float_share float,free_share float,
+                     total_mv float,circ_mv float,primary key(ts_code,trade_date))''')
+
 
     def __init__(self, startdate='20090101', enddate=datetime.datetime.today().strftime('%Y%m%d'), stocks=[]):
         self.startdate = startdate
@@ -161,7 +165,48 @@ class datamanage():
             self.dbconn.commit()
             print('{} ===========>date:{} funds got'.format( time.asctime( time.localtime(time.time()) ) ,day.strftime('%Y%m%d')))
 
+
+    def getbasicdaily(self):
+        if len(self.stocks) == 0:
+            self.stocks = list(self.stocklist['ts_code'])
+
+        #         获取所有数据
+        for stock in self.stocks:
+            print('{} ===========>basic ts_code:{} fetching'.format(time.asctime( time.localtime(time.time()) ),stock))
+            time.sleep(1)
+            wrongtime=0
+
+            try:
+                basicdaily = pro.daily_basic(ts_code=stock, start_date=self.startdate, end_date=self.enddate,fields='''ts_code,trade_date,close,turnover_rate,turnover_rate_f,volume_ratio,
+                     pe,pe_ttm,pb,ps,ps_ttm,dv_ratio,dv_ttm,total_share,float_share,free_share,
+                     total_mv,circ_mv''')
+                basicdaily.fillna('-1',inplace=True)
+            except:
+                print(stock, ', error')
+                time.sleep(5)
+                continue
+                
+            for i in range(len(basicdaily)):
+                self.dbcur.execute('''insert ignore into basicdaily(ts_code,trade_date,close,turnover_rate,turnover_rate_f,volume_ratio,
+                     pe,pe_ttm,pb,ps,ps_ttm,dv_ratio,dv_ttm,total_share,float_share,free_share,
+                     total_mv,circ_mv) 
+                                    values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+                                   (basicdaily.at[i, 'ts_code'], basicdaily.at[i, 'trade_date'],
+                                    float(basicdaily.at[i, 'close']), float(basicdaily.at[i, 'turnover_rate']),
+                                    float(basicdaily.at[i, 'turnover_rate_f']), float(basicdaily.at[i, 'volume_ratio']),
+                                    float(basicdaily.at[i, 'pe']), float(basicdaily.at[i, 'pe_ttm']),
+                                    float(basicdaily.at[i, 'pb']), float(basicdaily.at[i, 'ps']),
+                                    float(basicdaily.at[i, 'ps_ttm']), float(basicdaily.at[i, 'dv_ratio']),
+                                    float(basicdaily.at[i, 'dv_ttm']),float(basicdaily.at[i, 'total_share']),
+                                    float(basicdaily.at[i, 'float_share']),float(basicdaily.at[i, 'free_share']),
+                                    float(basicdaily.at[i, 'total_mv']),float(basicdaily.at[i, 'circ_mv'])))
+                
+            #         提交数据库
+            self.dbconn.commit()
+            print('{} ===========>basic ts_code:{} got'.format( time.asctime( time.localtime(time.time()) ) ,stock)) 
+
+
 if __name__=='__main__':
-    dm = datamanage('20181215')
-    dm.getstocksdaily()
+    dm = datamanage('20211101')
+    dm.getbasicdaily()
 #    dm.getadjfactor()

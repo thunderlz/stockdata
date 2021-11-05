@@ -7,3 +7,4 @@ if __name__=='__main__':
     dm.getindexdaily()
     dm.getadjfactor()
     dm.getfundsdaily()
+    dm.getbasicdaily()
